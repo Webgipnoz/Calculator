@@ -1,11 +1,8 @@
-import React, { useState, ReactNode } from "react";
-
+import React, { useState } from "react";
 import Wrapper from "./components/Wrapper/Wrapper";
 import Screen from "./components/Screen/Screen";
 import Button from "./components/Button/Button";
 import ButtonBox from "./components/ButtonBox/ButtonBox";
-
-import "./App.css";
 
 const btnValues = [
   ["C", "+-", "%", "/"],
@@ -21,47 +18,47 @@ interface CalcState {
   res: string;
 }
 
+const toLocaleString = (num: string) =>
+  String(num).replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, "$1 ");
+
+const removeSpaces = (num: string) => num.toString().replace(/\s/g, "");
+
 const App: React.FC = () => {
   const [calc, setCalc] = useState<CalcState>({
-    sign: "", // выбранный знак
-    num: "0", // введенное число
-    res: "0", // результат
+    sign: "",
+    num: "0",
+    res: "0",
   });
 
   const numClickHandler = (e: React.MouseEvent) => {
-    // if user use 0-9 like num
     e.preventDefault();
     const value = e.currentTarget.innerHTML;
 
-    if (calc.num.length < 16) {
+    if (removeSpaces(calc.num).length < 16) {
       setCalc({
         ...calc,
         num:
-          +calc.num === 0 && value === "0"
+          +removeSpaces(calc.num) === 0 && value === "0"
             ? "0"
-            : +calc.num % 1 === 0
-            ? String(Number(calc.num + value))
-            : calc.num + value,
+            : +removeSpaces(calc.num) % 1 === 0
+            ? toLocaleString(String(Number(removeSpaces(calc.num + value))))
+            : toLocaleString(calc.num + value),
         res: !calc.sign ? "0" : calc.res,
       });
     }
   };
 
   const commaClickHandler = (e: React.MouseEvent) => {
-    //if user click on '.'
     e.preventDefault();
     const value = e.currentTarget.innerHTML;
 
     setCalc({
       ...calc,
-      num: !calc.num.includes(".") ? calc.num + value : calc.num,
+      num: !calc.num.toString().includes(".") ? calc.num + value : calc.num,
     });
   };
 
   const signClickHandler = (e: React.MouseEvent) => {
-    // if user  click on "+, -, *, /"
-    // sign will be overwritten in obj calc
-
     e.preventDefault();
     const value = e.currentTarget.innerHTML;
 
@@ -69,16 +66,74 @@ const App: React.FC = () => {
       ...calc,
       sign: value,
       res: !calc.res && calc.num ? calc.num : calc.res,
+      num: "0",
     });
   };
 
-  const equalsClickHandler = () => {};
+  const equalsClickHandler = () => {
+    if (calc.sign && calc.num) {
+      const math = (a: number, b: number, sign: string) =>
+        sign === "+"
+          ? a + b
+          : sign === "-"
+          ? a - b
+          : sign === "X"
+          ? a * b
+          : a / b;
 
-  const percentClickHandler = () => {};
+      setCalc({
+        ...calc,
+        res:
+          calc.num === "0" && calc.sign === "/"
+            ? "Can't divide with 0"
+            : toLocaleString(
+                String(
+                  math(
+                    Number(removeSpaces(calc.res)),
+                    Number(removeSpaces(calc.num)),
+                    calc.sign
+                  )
+                )
+              ),
+        sign: "",
+        num: "0",
+      });
+    }
+  };
 
-  const invertClickHandler = () => {};
+  const invertClickHandler = () => {
+    setCalc({
+      ...calc,
+      num: calc.num
+        ? toLocaleString(String(+removeSpaces(calc.num) * -1))
+        : "0",
+      res: calc.res
+        ? toLocaleString(String(+removeSpaces(calc.res) * -1))
+        : "0",
+      sign: "",
+    });
+  };
 
-  const resetClickHandler = () => {};
+  const percentClickHandler = () => {
+    let num = calc.num ? parseFloat(removeSpaces(calc.num)) : 0;
+    let res = calc.res ? parseFloat(removeSpaces(calc.res)) : 0;
+
+    setCalc({
+      ...calc,
+      num: String(num / Math.pow(100, 1)),
+      res: String(res / Math.pow(100, 1)),
+      sign: "",
+    });
+  };
+
+  const resetClickHandler = () => {
+    setCalc({
+      ...calc,
+      sign: "",
+      num: "0",
+      res: "0",
+    });
+  };
 
   return (
     <Wrapper>
