@@ -49,6 +49,7 @@ const App: React.FC = () => {
   };
 
   const commaClickHandler = (e: React.MouseEvent) => {
+    // "."
     e.preventDefault();
     const value = e.currentTarget.innerHTML;
 
@@ -62,41 +63,42 @@ const App: React.FC = () => {
     e.preventDefault();
     const value = e.currentTarget.innerHTML;
 
-    setCalc({
-      ...calc,
-      sign: value,
-      res: !calc.res && calc.num ? calc.num : calc.res,
-      num: "0",
-    });
-  };
-
-  const equalsClickHandler = () => {
-    if (calc.sign && calc.num) {
-      const math = (a: number, b: number, sign: string) =>
-        sign === "+"
-          ? a + b
-          : sign === "-"
-          ? a - b
-          : sign === "X"
-          ? a * b
-          : a / b;
-
+    if (calc.num && calc.res === "0") {
       setCalc({
         ...calc,
-        res:
-          calc.num === "0" && calc.sign === "/"
-            ? "Can't divide with 0"
-            : toLocaleString(
-                String(
-                  math(
-                    Number(removeSpaces(calc.res)),
-                    Number(removeSpaces(calc.num)),
-                    calc.sign
-                  )
-                )
-              ),
-        sign: "",
+        sign: value,
         num: "0",
+        res: calc.num,
+      });
+    }
+  };
+  const equalsClickHandler = () => {
+    // =
+    if (calc.num && calc.sign) {
+      const currentNum = parseFloat(calc.num);
+      let result: string = "0";
+
+      switch (calc.sign) {
+        case "/":
+          result = (parseFloat(calc.res) / currentNum).toString();
+          break;
+        case "X":
+          result = (parseFloat(calc.res) * currentNum).toString();
+          break;
+        case "-":
+          result = (parseFloat(calc.res) - currentNum).toString();
+          break;
+        case "+":
+          result = (parseFloat(calc.res) + currentNum).toString();
+          break;
+        default:
+          break;
+      }
+
+      setCalc({
+        sign: "",
+        num: result,
+        res: "0",
       });
     }
   };
@@ -137,7 +139,7 @@ const App: React.FC = () => {
 
   return (
     <Wrapper>
-      <Screen value={calc.num ? calc.num : calc.res} />
+      <Screen value={calc.num !== "0" ? calc.num : calc.res} />
       <ButtonBox>
         {btnValues.flat().map((btn, i) => {
           return (
